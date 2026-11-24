@@ -27,7 +27,7 @@ def _auto_cust(params, d_min, has_map, has_data, log):
   Presets for engine_name=aimnet2 (as used in the tests for the paper).
   Data (d_min given) wins over a map, as it always did.
   """
-  if(params.quantum.engine_name != "aimnet2"): return
+  if(params.quantum.engine_name not in ("aimnet2", "alphadynamics")): return
   # The reflection-data presets depend on resolution; the map presets do
   # not (with a map d_min is None: it is the resolution of reflection data).
   if(has_data and not has_map and d_min is None):
@@ -35,8 +35,8 @@ def _auto_cust(params, d_min, has_map, has_data, log):
       "depend on resolution).")
   msg = """
 The following settings have been auto-set to match refine.mode=refine
-and quantum.engine_name=aimnet2:
-"""
+and quantum.engine_name=%s:
+""" % params.quantum.engine_name
   if params.debug: params.restraints = "cctbx"
   else:            params.restraints = "qm"
   params.cluster.clustering = False
@@ -97,6 +97,11 @@ def set_qm_defaults(params, log):
       params.quantum.method = ' --gfn 2 --etemp 500 --acc 0.1 --gbsa h2o'
       _pr(log, ' Default method for xtb is %s' % params.quantum.method)
       params.quantum.basis = ''
+  if params.quantum.engine_name == 'alphadynamics':
+    params.quantum.method = 'AD+GBn2'
+    params.quantum.basis = ''
+    _pr(log, ' AlphaDynamics: GBn2, AUX total response, native eV contract')
+    return
   if params.quantum.engine_name == 'aimnet2':
     _pr(log, "")
     _pr(log, "Setting aimnet2 specific defaults:")
@@ -191,6 +196,8 @@ def finalize_params(params, *, n_conformers, d_min=None,
     if(params.cluster.distance_buffer):
       _pr(log, "  clustering with restraints=cctbx: cluster.distance_buffer "
         "set to True")
+  if(params.quantum.engine_name == "alphadynamics" and params.cluster.clustering):
+    raise Sorry("AlphaDynamics initially supports whole-model/expansion routes; disable clustering.")
   # 6
   params.__inject__("finalized", True)
   params.__inject__("n_conformers", n_conformers)
@@ -311,6 +318,11 @@ ENGINES = {
   # The plugin imports the aimnet package, or aimnet2calc as a fallback.
   "aimnet2": _engine(False, _importable("qrefine.plugin.ase.aimnet2_qr"),
     "import of aimnet or aimnet2calc", _aimnet2_hint),
+  "alphadynamics": _engine(True,
+    lambda p: __import__('qrefine.plugin.ase.alphadynamics_qr',
+      fromlist=['available']).available(p),
+    "AD runtime and toolkit paths",
+    "Set quantum.alphadynamics.python and quantum.alphadynamics.toolkit"),
   "aimnet2-old": _engine(False, _importable("aimnet2calc"),
     "import of aimnet2calc", _aimnet2_hint),
   # pyscf, torchani: unverified: the plugin sets a cwd-relative chkfile /

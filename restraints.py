@@ -88,6 +88,7 @@ class restraints(object):
           charge           = self.params.quantum.charge if
             self.params.quantum.charge is not None else charge,
           qm_engine_name   = self.params.quantum.engine_name,
+          alphadynamics_params = getattr(self.params.quantum, "alphadynamics", None),
           qm_addon         = self.params.quantum.qm_addon,
           qm_addon_method  = self.params.quantum.qm_addon_method,
           memory           = self.params.quantum.memory,
@@ -285,7 +286,8 @@ class from_qm(object):
       basis                      = "sto-3g",
       memory                     = None,
       nproc                      = 1,
-      url                        = None
+      url                        = None,
+      alphadynamics_params       = None
   ):
     self.fragment_extracts  = fragment_extracts
     self.method = method
@@ -295,6 +297,7 @@ class from_qm(object):
     self.qm_addon = qm_addon
     self.qm_addon_method = qm_addon_method
     self.url = url
+    self.alphadynamics_params = alphadynamics_params
 
     self.crystal_symmetry = crystal_symmetry
     self.pdb_hierarchy = pdb_hierarchy
@@ -336,6 +339,9 @@ class from_qm(object):
     elif(self.qm_engine_name == "torchani"):
       from .plugin.ase.torchani_qr import TorchAni
       calculator = TorchAni()
+    elif(self.qm_engine_name == "alphadynamics"):
+      from .plugin.ase.alphadynamics_qr import AlphaDynamicsCalculator
+      calculator = AlphaDynamicsCalculator(self.alphadynamics_params)
     elif(self.qm_engine_name == "aimnet2-old"):
       from .plugin.ase.aimnet2_qr_old import AIMNet2CalculatorOLD
       calculator = AIMNet2CalculatorOLD()
@@ -466,4 +472,17 @@ def ase_atoms_from_pdb_hierarchy(ph, crystal_symmetry, qm_engine_name):
     # XXX Ugly work-around to by-pass inability of ASE to handle D atoms.
     #
     symbols = ["H" if symbol=="D" else symbol for symbol in symbols]
-    return Atoms(symbols=symbols, positions=positions)
+    result = Atoms(symbols=symbols, positions=positions)
+    if qm_engine_name == "alphadynamics":
+      metadata = []
+      residue_index = 0
+      for chain in ph.chains():
+        for rg in chain.residue_groups():
+          for atom in rg.atoms():
+            metadata.append(dict(name=atom.name.strip(),
+              resname=atom.parent().resname.strip(), chain=chain.id,
+              resid=rg.resid().strip(), residue_index=residue_index,
+              altloc=atom.parent().altloc))
+          residue_index += 1
+      result.info["qrefine_atom_metadata"] = metadata
+    return result

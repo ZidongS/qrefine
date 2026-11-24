@@ -95,7 +95,7 @@ expansion = False
   .type = bool
   .help = Expand input model into super-sphere
 quantum {
-  engine_name = *mopac fairchem aimnet2 aimnet2-old torchani terachem turbomole pyscf orca gaussian xtb server
+  engine_name = *mopac fairchem alphadynamics aimnet2 aimnet2-old torchani terachem turbomole pyscf orca gaussian xtb server
     .type = choice(multi=False)
     .help = choose the QM program
   basis = Auto
@@ -116,6 +116,20 @@ quantum {
   server_url =  http://127.0.0.1:8000
     .type = str
     .help = address (http://address:port) of the server API if engine_name=server
+  alphadynamics {
+    python = None
+      .type = path
+      .help = Python interpreter of the deployed AD runtime; ALPHADYNAMICS_PYTHON fallback.
+    toolkit = None
+      .type = path
+      .help = Parent directory containing AD_singlepoint and AD_singlepoint_implicit; ALPHADYNAMICS_TOOLKIT fallback.
+    timeout = 600
+      .type = float(value_min=1)
+      .help = Worker initialization and per-call timeout in seconds.
+    minimum_distance = 0.7
+      .type = float(value_min=0)
+      .help = Fail before inference on shorter contacts in the quantum cluster, in Angstrom.
+  }
   qm_addon = gcp dftd3 gcp-d3
     .type = choice(multi=False)
     .help = allows additional calculations of the gCP and/or DFT-D3 corrections using their stand-alone programs
