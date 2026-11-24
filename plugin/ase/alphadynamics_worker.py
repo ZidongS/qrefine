@@ -110,6 +110,7 @@ def run(fd, toolkit):
           (directory / "provenance.json").write_text(json.dumps(dict(
             python=sys.executable, torch=torch.__version__,
             toolkit=str(toolkit.resolve()), sources=sources,
+            vacuum_metadata=vacuum.metadata,
             vacuum_response="total", solvent="GBn2", charge_mode="aux",
             aux_response="total", aux_evaluation="single_forward"), indent=2))
         started = time.perf_counter()
