@@ -11,6 +11,10 @@ from qrefine import qr, api
 from qrefine.restraints import from_qm
 
 out=Path(sys.argv[1]);out.mkdir(parents=True,exist_ok=True)
+def public(scope):
+ return {k:public(v) if hasattr(v,'__dict__') else v
+  for k,v in vars(scope).items() if not k.startswith('_')}
+
 p=qr.get_default_params();p.quantum.engine_name='alphadynamics'
 api.check_engine(p)
 for group,kw in [('cryoem',dict(has_map=True)),('xray_high',dict(has_data=True,d_min=1.0)),('xray_low',dict(has_data=True,d_min=3.5))]:
@@ -19,7 +23,7 @@ for group,kw in [('cryoem',dict(has_map=True)),('xray_high',dict(has_data=True,d
  api.finalize_params(a,n_conformers=0,**kw);api.finalize_params(b,n_conformers=0,**kw)
  for name in ['expansion','restraints']:
   assert getattr(a,name)==getattr(b,name),(group,name)
- assert vars(a.refine)==vars(b.refine),(group,'refine')
+ assert public(a.refine)==public(b.refine),(group,'refine')
 print('PRESET_PARITY_OK',flush=True)
 pdb='''CRYST1   25.000   25.000   25.000  90.00  90.00  90.00 P 1
 HETATM    1  O   HOH A   1       5.000   5.000   5.000  1.00 20.00           O
