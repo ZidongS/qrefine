@@ -119,16 +119,16 @@ quantum {
   alphadynamics {
     python = None
       .type = path
-      .help = Python interpreter of the deployed AD runtime; ALPHADYNAMICS_PYTHON fallback.
+      .help = "Python interpreter of the deployed AD runtime; ALPHADYNAMICS_PYTHON fallback."
     toolkit = None
       .type = path
-      .help = Parent directory containing AD_singlepoint and AD_singlepoint_implicit; ALPHADYNAMICS_TOOLKIT fallback.
+      .help = "Parent directory containing AD_singlepoint and AD_singlepoint_implicit; ALPHADYNAMICS_TOOLKIT fallback."
     timeout = 600
       .type = float(value_min=1)
-      .help = Worker initialization and per-call timeout in seconds.
+      .help = "Worker initialization and per-call timeout in seconds."
     minimum_distance = 0.7
       .type = float(value_min=0)
-      .help = Fail before inference on shorter contacts in the quantum cluster, in Angstrom.
+      .help = "Fail before inference on shorter contacts in the quantum cluster, in Angstrom."
   }
   qm_addon = gcp dftd3 gcp-d3
     .type = choice(multi=False)
