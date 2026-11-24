@@ -66,3 +66,28 @@ audited baseline before model-ranking claims.
 No historical checkout, source compatibility copy, result directory or shared
 environment should be overwritten for this development. Run from an isolated
 checkout and run directory with pinned Q|R, cctbx, AD sources and weight hashes.
+
+
+## Validated development environment
+
+The initial integration uses CCTBX nightly `2026.11a23` and Python 3.12 in a
+separate prefix. CCTBX `2026.10` lacks `iotbx.pdb.altloc_completion` needed by
+this upstream Q|R baseline. Installing `cctbx-base` alone is insufficient:
+Reduce2 also needs NetworkX and the chemical dictionaries; the upstream
+geometry summary needs registered Probe/Reduce modules and their
+`molprobity.probe`/`molprobity.reduce` executable names. Configure these in the
+new environment and export `LIBTBX_BUILD` **after** sourcing its setpaths.sh.
+Never configure or upgrade the historical experimental environment in place.
+
+Legacy chem_data Rama-Z Python 2 pickles may load with byte keys through
+`libtbx.easy_pickle`, while current rama_z expects string keys. If encountered,
+reserialize a **private copy** with Python 3 protocol 4 and verify the decoded
+nested data are identical. Preserve the original file, both hashes and the
+conversion record. This changes storage compatibility, not table values.
+
+Before protein GPU tests, run Reduce2 QM-ready preparation, Q|R dry-run and a
+complete geometry summary on CPU. Retain failures: QM-ready input validation
+can reject genuine symmetry clashes before any AD call. Test the real GPU
+bridge with `plugin/ase/test_alphadynamics_cctbx.py OUTPUT_DIRECTORY`; it checks
+preset parity, Q|R conversion/sign and a water finite difference. Protein
+refinement and independent validation are still required after that gate.
