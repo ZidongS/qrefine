@@ -476,11 +476,12 @@ def ase_atoms_from_pdb_hierarchy(ph, crystal_symmetry, qm_engine_name):
     if qm_engine_name == "alphadynamics":
       metadata = []
       residue_index = 0
-      for chain in ph.chains():
+      for chain_index, chain in enumerate(ph.chains()):
         for rg in chain.residue_groups():
           for atom in rg.atoms():
             metadata.append(dict(name=atom.name.strip(),
               resname=atom.parent().resname.strip(), chain=chain.id,
+              chain_index=chain_index,
               resid=rg.resid().strip(), residue_index=residue_index,
               altloc=atom.parent().altloc))
           residue_index += 1

@@ -22,10 +22,11 @@ def gbn2_parameters(symbols, xyz, metadata):
   top = app.Topology()
   atoms, residues, chains = [], {}, {}
   for symbol, m in zip(symbols, metadata):
-    chain = chains.setdefault(m["chain"], None)
+    chain_key = (m.get("chain_index", m["chain"]), m["chain"])
+    chain = chains.setdefault(chain_key, None)
     if chain is None:
-      chain = chains[m["chain"]] = top.addChain(m["chain"])
-    key = (m["chain"], m["residue_index"])
+      chain = chains[chain_key] = top.addChain(m["chain"])
+    key = (chain_key, m["residue_index"])
     if key not in residues:
       residues[key] = top.addResidue(m["resname"], chain, id=m["resid"])
     atoms.append(top.addAtom(m["name"], app.element.Element.getBySymbol(symbol),
@@ -43,6 +44,7 @@ def gbn2_parameters(symbols, xyz, metadata):
       m = metadata[i]
       possible = [j for j, s in enumerate(symbols) if s != "H" and
         metadata[j]["chain"] == m["chain"] and
+        metadata[j].get("chain_index") == m.get("chain_index") and
         metadata[j]["residue_index"] == m["residue_index"] and
         np.linalg.norm(xyz[i]-xyz[j]) <= 1.5]
       possible.sort(key=lambda j: np.linalg.norm(xyz[i]-xyz[j]))
